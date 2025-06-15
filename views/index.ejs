@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>図面検索</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/style-basic.css">
+    <link rel="stylesheet" href="/static/css/style-index.css">
+</head>
+<body>
+    <!-- Common JavaScript EJS -->
+    <%- include("_myfunctions.ejs") %>
+    <% let osType = myRequestHeader.osType(req); %>
+
+    <!-- Header -->
+    <%- include("_header.ejs", { req, title: title }) %>
+
+    <div id="containers">
+        <!-- Groups -->
+        <div id="navigate">
+            <!-- 品番入力タイトル -->
+            <div>
+                <div class="large">製品バーコード：</div>
+                <div class="normal">Product code (Barcode)</div>
+            </div>
+            <!-- 品番入力ボックス -->
+            <!-- email:日本語入力不可、inputmode:noneソフトウェアキーボードを表示しない -->
+            <div>
+                <input type="text" placeholder="品番をスキャン" id="input-hmcd" inputmode="none">
+            </div>
+            <!-- 全画面表示切り替えチェックボックス -->
+            <div><label class="check-disp">
+                <input type="checkbox" id="checkDisp" onchange="checkDispChange()">&nbsp;&nbsp;全画面表示
+            </label></div>
+            <!-- ソフトウェアキーボードの表示切り替えチェックボックス -->
+            <!-- OSがWindows以外の場合 -->
+            <% if (osType != "windows") { %>
+            <div><label class="check-disp">
+                <input type="checkbox" id="checkKeyboard" onfocus="focusFunction()" onchange="checkKeyboardChange()">&nbsp;&nbsp;ソフトキーボード
+            </label></div>
+            <% }; %>
+            <input type="hidden" name="pageno" id="pageno" value="">
+        </div>
+
+        <!-- Details -->
+        <div id="details">
+            <div id="output">
+                <iframe src="/static/images/Initialize.pdf#view=FitV&toolbar=0&zoom=FitV" width="100%" height="100%" frameborder="0" style="border:none;">
+                    <p>
+                        Your Browser does not support PFD files.
+                    </p>
+                </iframe>
+            </div>
+        </div>
+
+        <!-- Dummy余白調整 -->
+        <div></div>
+    </div>
+
+    <!-- Footer -->
+    <%- include("_footer.ejs", req) %>
+
+    <!-- ブラウザ読み込み完了後のJavaScriptを記述 -->
+    <script type="text/javascript">
+
+        // オブジェクト変数を設定
+        const inputHmcdObj = document.getElementById("input-hmcd");
+        const titlenameObj = document.getElementById("titlename");
+        const titlepageObj = document.getElementById("titlepage");
+        const outputObj = document.getElementById("output");
+        const checkDispObj = document.getElementById("checkDisp");
+        const checkKeyboardObj = document.getElementById("checkKeyboard");
+
+        // 定数設定
+        const jpegPath = "/static/manuals/";
+
+        // キーダウンイベントリスナーを設定
+        inputHmcdObj.addEventListener("keydown", hmcdKeydown);
+
+        // 初期フォーカスを設定
+        inputHmcdObj.select(); 
+        
+        // 品番入力キーダウンコールバック関数
+        function hmcdKeydown(e) {
+            if (e.key === "Enter" && this.value !== "") {
+                searchHMCD(0);
+                // 次のスキャンに向け、品番にフォーカスセット
+                inputHmcdObj.select();
+            }
+        }
+        
+        // 図面検索（ページno == 配列インデックス番号 ・・・ [0]スタート）
+        function searchHMCD(pagenoparam) {
+            
+            // パラメータを数値型に変換
+            const pageno = Number(pagenoparam);
+
+            // 小文字大文字変換（全角半角変換もここでしたい）
+            let inputHmcd = inputHmcdObj.value.toUpperCase().replace("%", "");
+            if (inputHmcdObj.value != inputHmcd) inputHmcdObj.value = inputHmcd;
+
+            // 品番検索
+            const xmlHttpRequest = new XMLHttpRequest();
+            xmlHttpRequest.open('GET', `/search/${inputHmcd}`, false);
+            xmlHttpRequest.send();
+            // 正常の場合
+            if (xmlHttpRequest.readyState == 4 && xmlHttpRequest.status == 200 ) {
+
+                // 取得した結果を変数に設定
+                const aryfn = JSON.parse(xmlHttpRequest.responseText);
+
+                // タイトルにファイル名を表示
+                const jpegName = aryfn[pageno].fileName;
+                titlenameObj.innerText = "図面 [ " + jpegName + " ] ";
+                titlepageObj.innerText = "";
+                document.querySelector("#titlename").style.left = "calc((100vw / 2) - " + jpegName.length / 3 + "em)"; // タイトル名が画面中央に来るよう調整
+
+                // 複数Hitした場合、ページ切替ボタンを表示
+                let prev = "";
+                let next = "";
+                if (aryfn.length > 1) {
+                    titlepageObj.innerText = (pageno + 1) + "/" + aryfn.length + "件Hit";
+                    prev = "<a href='javascript:prev()'><img class='prev' src='/static/images/fa-chevron-circle-left.png'></a>";
+                    next = "<a href='javascript:next()'><img class='next' src='/static/images/fa-chevron-circle-right.png'></a>";
+                }
+                if (pageno == 0) prev = "";
+                if (pageno == aryfn.length - 1) next = "";
+
+                // 親要素の幅と高さを取得し、画像サイズを含めステータスに表示
+                const parentElement = document.querySelector("#details");
+                const parentWidth = parentElement.offsetWidth;  // 幅を取得
+                const parentHeight = parentElement.offsetHeight;// 高さを取得
+                document.querySelector("#responsible").innerText = 
+                    "W:" + parentWidth + " H:" + parentHeight + "  " + 
+                    "img" + aryfn[pageno].width + "x" + aryfn[pageno].height;
+                
+                // 枠の高さ設定を解除
+                //outputObj.style.height = "auto";
+                const monitor_aspect_ratio = parentWidth / parentHeight;
+                const jpeg_aspect_ratio = aryfn[pageno].width / aryfn[pageno].height;
+                //alert("Monitor:" + monitor_aspect_ratio + "<>" + jpeg_aspect_ratio)
+
+                // 画像を表示
+                if (parentHeight > parentWidth) {
+                    // 画面が縦長の場合
+                    outputObj.innerHTML = `${prev}<img src='${jpegPath}${jpegName}' width='${parentWidth}' frameborder='0' style='margin:0 auto'>${next}`;
+                
+                } else if (monitor_aspect_ratio > jpeg_aspect_ratio) {
+                    // 画面が横長かつ画像ファイルが横長の場合は幅を画面幅に合わせて表示
+                    outputObj.innerHTML = `${prev}<img src='${jpegPath}${jpegName}' height='${parentHeight - 20}' frameborder='0' style='margin:auto'>${next}`;
+
+                } else {
+                    // 画面が横長かつ画像ファイルが縦長の場合は高さを画面高さに合わせて表示
+                    outputObj.innerHTML = `${prev}<img src='${jpegPath}${jpegName}' width='${parentWidth - 20}' height='auto' frameborder='0' style='margin:20px auto'>${next}`;
+                }
+
+                // 検索状態を保持
+                document.getElementById("pageno").value = pageno;
+
+            } else {
+
+                // 検索結果なしを表示
+                titlenameObj.innerText = "図面検索";
+                titlepageObj.innerText = "";
+                document.querySelector("#titlename").style.left = "calc((100vw / 2) - 3em)"
+                
+                // PDF表示
+                const pdfPath = "/static/images/";
+                const pdfName = "Nothing.pdf";
+                output.innerHTML = `<iframe src='${pdfPath}${pdfName}#view=FitV&toolbar=0&zoom=FitV' width='100%' height='100%' frameborder='0' style='border:none;'></iframe>`;
+
+                // 検索状態を保持
+                document.getElementById("pageno").value = "";
+            }
+
+        }
+
+        // 次ページ
+        function next() {
+            const pageno = Number(document.getElementById("pageno").value) + 1;
+            searchHMCD(pageno);
+        }
+
+        // 前ページ
+        function prev() {
+            const pageno = Number(document.getElementById("pageno").value) - 1;
+            searchHMCD(pageno);
+        }
+
+        // 全画面表示切り替えチェックボックス
+        function checkDispChange() {
+            if (checkDispObj.checked) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+            inputHmcdObj.select(); // フォーカスセット
+        }
+
+        // ソフトウェアキーボード表示の切り替えチェックボックス
+        function checkKeyboardChange() {
+            if (checkKeyboardObj.checked) {
+                inputHmcdObj.inputMode = "search";
+                inputHmcdObj.select();
+            } else {
+                inputHmcdObj.blur(); // 現在フォーカスされている要素を解除
+                setTimeout(() => {
+                    inputHmcdObj.inputMode = "none";
+                    inputHmcdObj.select();
+                }, 100);    // 時間を待たないとソフトウェアキーボードが消えてくれない
+            }
+        }
+
+    </script>
+
+</body>
+</html>
