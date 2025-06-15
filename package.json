@@ -1,18 +1,22 @@
 {
-  "name": "procedure-manual",
+  "name": "Koken PictureSearch Service",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "コーケン工場の図面検索サービスを提供します。",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node.exe server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install-service": "winser -i -a",
+    "uninstall-service": "winser -r -x"
   },
-  "author": "",
+  "author": "y.watanabe",
   "license": "ISC",
   "dependencies": {
     "ejs": "^3.1.10",
     "express": "^4.19.2",
     "image-size": "^2.0.2",
     "log4js": "^6.9.1",
-    "serve-favicon": "^2.5.0"
+    "serve-favicon": "^2.5.0",
+    "winser": "^1.0.3"
   }
 }

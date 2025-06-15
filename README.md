@@ -8,12 +8,17 @@
 - Node.js v18.12.1  
 - nvm-windows 1.1.10  
 
-## npmパッケージ
+## npmパッケージ  
 - ejs@3.1.10  
 - express@4.19.2  
 - image-size@^2.0.2  
 - log4js@^6.9.1  
 - serve-favicon@2.5.0  
+- winser@1.0.3
+
+## サービス開始手順  
+- npm run install-service
+- npm run uninstall-service
 
 ## メンバー  
 - y.watanabe  
