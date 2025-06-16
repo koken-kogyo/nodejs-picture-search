@@ -142,15 +142,16 @@
 
                 // 画像を表示
                 if (parentHeight > parentWidth) {
-                    // 画面が縦長の場合
-                    outputObj.innerHTML = `${prev}<img src='${jpegPath}${jpegName}' width='${parentWidth}' frameborder='0' style='margin:0 auto'>${next}`;
+                    // 画面が縦向きの場合
+                    let h = parentWidth * (1 / jpeg_aspect_ratio);
+                    outputObj.innerHTML = `${prev}<img src='${jpegPath}${jpegName}' width='${parentWidth}' height='${h}' frameborder='0' style='margin:0 auto'>${next}`;
                 
                 } else if (monitor_aspect_ratio > jpeg_aspect_ratio) {
-                    // 画面が横長かつ画像ファイルが横長の場合は幅を画面幅に合わせて表示
+                    // 画面横に余力があれば画面の縦に合わせて画像をリサイズ表示
                     outputObj.innerHTML = `${prev}<img src='${jpegPath}${jpegName}' height='${parentHeight - 20}' frameborder='0' style='margin:auto'>${next}`;
 
                 } else {
-                    // 画面が横長かつ画像ファイルが縦長の場合は高さを画面高さに合わせて表示
+                    // 画面縦に余力があれば画面の幅に合わせて画像をリサイズ表示
                     outputObj.innerHTML = `${prev}<img src='${jpegPath}${jpegName}' width='${parentWidth - 20}' height='auto' frameborder='0' style='margin:20px auto'>${next}`;
                 }
 

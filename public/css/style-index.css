@@ -18,6 +18,20 @@
         grid-template-rows: 60px auto;
     }
 }
+/* mobile-portrait(縦)-size: ～900px縦 */
+@media screen and (orientation: portrait) and (max-height: 900px) {
+    #containers {
+        grid-template-columns: 1fr;
+        grid-template-rows: 90px auto;
+    }
+}
+/* mobile-landscape(横)-size: ～500px縦 && ～900px横 */
+@media screen and (orientation: landscape) and (max-height:500px) and (max-width:900px) {
+    #containers {
+        grid-template-columns: 230px auto;
+        grid-template-rows: 1fr;
+    }
+}
 /* =========================================================================== */
 /*  Navigation
 /* =========================================================================== */
@@ -50,15 +64,15 @@ input[type='text'] {
 input[type='text']:focus {
     box-shadow: 0 0 2px 2px rgba(233, 85, 85, 0.8);
 }
-input[type="checkbox"] {
-    transform: scale(1.5);
-    margin-top: 22px;
-    cursor: pointer;
-}
 .check-disp {
+    display: flex;
     font-size: 1.0em;
     color: rgba(200, 200, 200, 0.5);
     margin-left: 20px;
+    cursor: pointer;
+}
+input[type="checkbox"] {
+    transform: scale(1.5);
     cursor: pointer;
 }
 /* 画面の比率が A3比率 [√2:1] 以下の 縦長画面の場合は上にナビゲーションを配置 */
@@ -76,12 +90,38 @@ input[type="checkbox"] {
     }
     .check-disp {
         margin-left: 5px;
+        margin-top: 16px;
     }
     input[type="checkbox"] { transform: scale(1.2); }
     input[type='text'] {
         height: 1rem;
         margin-top: 1rem;
     }
+}
+/* mobile-portrait(縦)-size: ～900px縦 */
+@media screen and (orientation: portrait) and (max-height: 900px) {
+    #navigate {
+        grid-template-columns: 35% 65%;
+        grid-template-rows: 45px 30px;
+    }
+    .large {font-size: 0.8em;margin-top: 1.2em;margin-left: 1.5em;}
+    .normal {font-size: 0.5em;margin-top: 1em;margin-left: 1.5em;}
+    .check-disp {font-size: 0.8em;}
+    input[type='text'] {font-size: 0.8em;}
+    input[type="checkbox"] {transform: scale(1.0);margin-top: 0px;}
+}
+/* mobile-landscape(横)-size: ～500px縦 && ～900px横 */
+@media screen and (orientation: landscape) and (max-height:500px) and (max-width:900px) {
+    #navigate {
+        grid-template-columns: 1fr;
+        grid-template-rows: 80px 60px 30px 30px;
+        padding-top: 5px;
+    }
+    .large {font-size: 0.8em;margin-top: 2em;margin-left: 1.5em;}
+    .normal {font-size: 0.5em;margin-top: 1em;margin-left: 1.5em;}
+    .check-disp {font-size: 0.8em;}
+    input[type='text'] {font-size: 0.8em;}
+    input[type="checkbox"] {transform: scale(1.0);margin-top: 0px;}
 }
 /* =========================================================================== */
 /*  図面
@@ -120,13 +160,7 @@ input[type="checkbox"] {
 }
 /* 画面の比率が A3比率 [√2:1] 以下の 縦長画面の場合は上にナビゲーションを配置 */
 @media screen and (max-aspect-ratio: 1414/1000) {
-    #details {
-        width: 100vw;
-        height: calc(100vh - 100px);
-    }
-    #output {
-        height: auto;
-    }
+    #details {height: calc(100vh - 100px);width: 100vw;}
 }
 /* =========================================================================== */
 /*  ワーニング
