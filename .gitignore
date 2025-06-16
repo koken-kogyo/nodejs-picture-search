@@ -26,9 +26,8 @@ pdfs/
 jpegs/
 manuals/
 
-# pythonPopplerLibrary
-pythonPopplerLibrary/
-pythonPopplerShare/
+# csharp
+bin/
 
 # sample sources
 sample/
