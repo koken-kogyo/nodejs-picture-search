@@ -28,15 +28,18 @@
             <div>
                 <input type="text" placeholder="品番をスキャン" id="input-hmcd" inputmode="none">
             </div>
-            <!-- 全画面表示切り替えチェックボックス -->
-            <div><label class="check-disp">
-                <input type="checkbox" id="checkDisp" onchange="checkDispChange()">&nbsp;&nbsp;全画面表示
-            </label></div>
             <!-- ソフトウェアキーボードの表示切り替えチェックボックス -->
             <!-- OSがWindows以外の場合 -->
             <% if (osType != "windows") { %>
             <div><label class="check-disp">
                 <input type="checkbox" id="checkKeyboard" onfocus="focusFunction()" onchange="checkKeyboardChange()">&nbsp;&nbsp;ソフトキーボード
+            </label></div>
+            <% }; %>
+            <!-- 全画面表示切り替えチェックボックス -->
+            <!-- OSがWindows,Android(linux)の場合 -->
+            <% if (osType == "windows" || osType == "linux") { %>
+            <div><label class="check-disp">
+                <input type="checkbox" id="checkDisp" onchange="checkDispChange()">&nbsp;&nbsp;全画面表示
             </label></div>
             <% }; %>
             <input type="hidden" name="pageno" id="pageno" value="">
@@ -200,13 +203,17 @@
 
         // ソフトウェアキーボード表示の切り替えチェックボックス
         function checkKeyboardChange() {
+            inputHmcdObj.blur(); // フォーカスを解除
             if (checkKeyboardObj.checked) {
-                inputHmcdObj.inputMode = "search";
-                inputHmcdObj.select();
-            } else {
-                inputHmcdObj.blur(); // 現在フォーカスされている要素を解除
+                inputHmcdObj.inputMode = "email";
                 setTimeout(() => {
-                    inputHmcdObj.inputMode = "none";
+                    inputHmcdObj.select();
+                }, 100);    // 一旦フォーカスを外して時間を待たないとソフトウェアキーボードが再表示されない
+                // iOSのキーボード設定で「表示しない」「しまう」の場合は、上記を行っても表示されないが
+                // 「キーボードを表示」に変更すれば期待通りの動作をする
+            } else {
+                inputHmcdObj.inputMode = "none";
+                setTimeout(() => {
                     inputHmcdObj.select();
                 }, 100);    // 時間を待たないとソフトウェアキーボードが消えてくれない
             }
