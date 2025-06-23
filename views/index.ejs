@@ -160,8 +160,8 @@
 
                 // 検索状態を保持
                 document.getElementById("pageno").value = pageno;
-
-            } else {
+            
+            } else if (xmlHttpRequest.readyState == 4 && xmlHttpRequest.status == 299 ) {
 
                 // 検索結果なしを表示
                 titlenameObj.innerText = "図面検索";
@@ -171,10 +171,16 @@
                 // PDF表示
                 const pdfPath = "/static/images/";
                 const pdfName = "Nothing.pdf";
-                output.innerHTML = `<iframe src='${pdfPath}${pdfName}#view=FitV&toolbar=0&zoom=FitV' width='100%' height='100%' frameborder='0' style='border:none;'></iframe>`;
+                outputObj.innerHTML = `<iframe src='${pdfPath}${pdfName}#view=FitV&toolbar=0&zoom=FitV' width='100%' height='100%' frameborder='0' style='border:none;'></iframe>`;
 
                 // 検索状態を保持
                 document.getElementById("pageno").value = "";
+
+            } else {
+
+                outputObj.innerHTML = "サーバー動作で異常が発生しました．" + xmlHttpRequest.responseText;
+                outputObj.classList.add("alert");
+
             }
 
         }

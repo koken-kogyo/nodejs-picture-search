@@ -7,7 +7,7 @@ const path = require("path");
 const fs = require("fs");
 
 // image-size: 画像の幅や高さを取得するのに特化した軽量ライブラリ
-const { imageSizeFromFile } = require('image-size/fromFile')
+const { imageSizeFromFile } = require("image-size/fromFile");
 
 const https = require("https");
 const options = {
@@ -35,35 +35,42 @@ app.get('/', (req, res) => {
     res.render("index.ejs", {req, title: "図面検索"});
 });
 
-// PDFファイル検索 API
+// ファイル検索 API
 app.get("/search/:hmcd", async function (req, res) {
     const hmcd = req.params.hmcd;
-
-    // 入力品番から検索結果のファイル名一覧を取得
-    const files = fs.readdirSync(`./public/manuals`);
-    const targets = files.filter(fn => fn.indexOf(hmcd)!==-1);
-    // フォルダ内検索結果を判定
-    if ( targets.length == 0 ) {
-        res.status(299).end(); // 手順書なし
-    } else {
-        const results = [];
-        for (const value of targets) {
-            const dimensions = await imageSizeFromFile(`./public/manuals/${value}`);
-            results.push({
-                "fileName": value,
-                "width": dimensions.width,
-                "height": dimensions.height
-            });
+    try {
+        // 画像フォルダから入力品番のファイル名一覧を取得
+        const files = fs.readdirSync(`./public/manuals`);
+        const targets = files.filter(fn => fn.indexOf(hmcd)!==-1);
+        // 結果判定
+        if ( targets.length == 0 ) {
+            const logger = log4js.getLogger("warn");
+            logger.warn(`/search/${hmcd} - なし`);
+            res.status(299).end(); // 検索結果なし
+        } else {
+            //　検索結果をログに記録
+            const logger = log4js.getLogger("info");
+            let msg = "/search/" + hmcd;
+            msg += (targets.length > 1) ? ` - ${targets.length}件` : "";
+            logger.info(msg);
+            // 検索結果ファイルの画像サイズを取得
+            const results = [];
+            for (const value of targets) {
+                const dimensions = await imageSizeFromFile(`./public/manuals/${value}`);
+                results.push({
+                    "fileName": value,
+                    "width": dimensions.width,
+                    "height": dimensions.height
+                });
+            }
+            // 検索結果を返却
+            res.status(200).end(JSON.stringify(results));
         }
-        res.status(200).end(JSON.stringify(results));
+    } catch (err) {
+        const logger = log4js.getLogger("e");
+        logger.error("ファイルの検索で異常が発生しました:" + `${err}`);
+        res.status(500).send(`ファイルの検索で異常が発生しました．:${err}`);
     }
-});
-
-// 包括的エラーハンドリング
-app.use((err, req, res, next) => {
-    console.log("包括的エラーハンドリング")
-    console.error(err);
-    res.status(500).send(`サーバーの動作が失敗しました．:${err.code} `);
 });
 
 // サーバーを起動
